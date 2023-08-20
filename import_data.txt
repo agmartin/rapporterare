@@ -1,0 +1,22 @@
+--use this command to import data from the command line
+--sqlite3 rapporterare.db < import_data.txt
+
+.mode csv users
+.import ./raw_data/users.csv users
+
+CREATE table user_posts(person_id INTEGER, taken_at DATETIME, caption_text TEXT, caption_tags TEXT, like_count INTEGER, comment_count INTEGER);
+.mode csv
+.import ./raw_data/user_posts.csv user_posts
+
+CREATE TABLE user_posts_cleaned(post_id INTEGER PRIMARY KEY AUTOINCREMENT, person_id INTEGER, taken_at DATETIME, month_name TEXT, year INTEGER, caption_text TEXT, caption_tags TEXT, like_count INTEGER, comment_count INTEGER);
+
+
+INSERT INTO user_posts_cleaned(person_id, taken_at, month_name, year, caption_text, caption_tags, like_count, comment_count)
+SELECT person_id, taken_at, rtrim (substr ("January  February March    April    May      June     July     August   SeptemberOctober  November December", strftime ("%m", taken_at) * 9 - 8, 9)) as month_name,
+strftime('%Y', taken_at) as year,
+caption_text,
+CASE WHEN caption_tags IN ('[]', 'NULL') THEN NULL ELSE caption_tags END as caption_tags_cleaned,
+like_count,
+comment_count
+FROM user_posts
+WHERE person_id != 'person_id'
